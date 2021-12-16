@@ -46,6 +46,7 @@ fun runDijkstra(table: Table) : Int {
 
         if (y == table.size - 1 && x == table[y].size - 1) { // destination reached
             println("found final destination ($x, $y) = $cumulatedRisk")
+            break
         } else {
             mapOf(
                     Visit(x + 1, y, cumulatedRisk) to table.getValueOrNull(x + 1, y), // right
