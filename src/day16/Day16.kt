@@ -3,6 +3,7 @@ package day16
 import readInput
 import java.lang.IllegalStateException
 
+data class ParsingResult(val packet: Packet, val restOfString: String)
 sealed class Packet {
     data class LiteralValue(val v: Int, val number: Long) : Packet() {
         override fun getVersionSum() = v
@@ -38,7 +39,7 @@ fun String.hexToBinary(): String {
     return sb.toString()
 }
 
-fun parseLiteralValue(version: Int, binary: String) : Pair<Packet.LiteralValue, String> {
+fun parseLiteralValue(version: Int, binary: String) : ParsingResult {
     val binaryNb = StringBuilder()
     var lastIdx = 0
 
@@ -49,41 +50,41 @@ fun parseLiteralValue(version: Int, binary: String) : Pair<Packet.LiteralValue, 
             break
         }
     }
-    return Pair(Packet.LiteralValue(version, binaryNb.toString().toLong(2)), binary.drop(lastIdx + 5))
+    return ParsingResult(Packet.LiteralValue(version, binaryNb.toString().toLong(2)), binary.drop(lastIdx + 5))
 }
 
-fun parseOperatorPacket(version: Int, typeId: Int, binary: String) : Pair<Packet.Operator, String> {
+fun parseOperatorPacket(version: Int, typeId: Int, binary: String) : ParsingResult {
     val subPackets = mutableListOf<Packet>()
     var rest = ""
 
     when (binary.first()) {
         '1' -> {
             val numberOfSubPackets = binary.drop(1).take(11).toInt(2)
-            var res = parsePacket(binary.drop(1 + 11))
-            subPackets.add(res.first)
+            var result = parsePacket(binary.drop(1 + 11))
+            subPackets.add(result.packet)
 
             for (i in 1 until numberOfSubPackets) {
-                res = parsePacket(res.second)
-                subPackets.add(res.first)
+                result = parsePacket(result.restOfString)
+                subPackets.add(result.packet)
             }
-            rest = res.second
+            rest = result.restOfString
         }
         '0' -> {
             val totalLength = binary.drop(1).take(15).toInt(2)
-            var res = parsePacket(binary.drop(1 + 15).take(totalLength))
-            subPackets.add(res.first)
+            var result = parsePacket(binary.drop(1 + 15).take(totalLength))
+            subPackets.add(result.packet)
 
-            while (res.second.isNotEmpty()) {
-                res = parsePacket(res.second)
-                subPackets.add(res.first)
+            while (result.restOfString.isNotEmpty()) {
+                result = parsePacket(result.restOfString)
+                subPackets.add(result.packet)
             }
             rest = binary.drop(1 + 15 + totalLength)
         }
     }
-    return Pair(Packet.Operator(version, typeId, subPackets), rest)
+    return ParsingResult(Packet.Operator(version, typeId, subPackets), rest)
 }
 
-fun parsePacket(binary: String) : Pair<Packet, String> {
+fun parsePacket(binary: String) : ParsingResult {
     val version = binary.take(3)
     val typeID = binary.drop(3).take(3)
 
@@ -97,12 +98,12 @@ fun part1(lines: List<String>): Int {
     val binary = lines.first().hexToBinary()
 
     println(binary)
-    return parsePacket(binary).first.let {
+    return parsePacket(binary).packet.let {
         it.also { println(it) }
     }.getVersionSum()
 }
 
-fun part2(lines: List<String>) = parsePacket(lines.first().hexToBinary()).first.getTotal()
+fun part2(lines: List<String>) = parsePacket(lines.first().hexToBinary()).packet.getTotal()
 
 fun main() {
     val testInput = readInput("day16/test")
