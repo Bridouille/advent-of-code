@@ -167,7 +167,7 @@ fun part2(lines: List<String>): Long {
     var maxMagnitude = 0L
 
     for (i in 0 until trees.size) {
-        for (j in 0 until trees.size) {
+        for (j in i+1 until trees.size) {
             if (i == j) continue // Do not add with yourself
 
             val newTree = trees[i].add(trees[j])
