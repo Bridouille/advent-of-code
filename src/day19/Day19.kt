@@ -9,8 +9,8 @@ data class Point(val x: Int, val y: Int, val z: Int) {
         return "[$x,$y,$z]"
     }
 
-    fun getPermutations() : List<Point> {
-        val totalList = mutableListOf<Point>()
+    fun getPermutations() : Set<Point> {
+        val totalList = mutableSetOf<Point>()
         for (rotateX in listOf(-1, 1)) {
             for (rotateY in listOf(-1, 1)) {
                 for (rotateZ in listOf(-1 ,1)) {
@@ -30,7 +30,7 @@ data class Point(val x: Int, val y: Int, val z: Int) {
         return ((other.x - x).toFloat().pow(2) + (other.y - y).toFloat().pow(2) + (other.z - z).toFloat().pow(2)).toLong()
     }
 }
-data class Scanner(var pos: Point?, val scans: List<Point>)
+data class Scanner(val id: Int, val scans: List<Point>)
 
 fun List<String>.toScanners() : List<Scanner> {
     val scanners = mutableListOf<Scanner>()
@@ -38,45 +38,71 @@ fun List<String>.toScanners() : List<Scanner> {
 
     for (line in this.drop(1)) {
         if (line.startsWith("--- scanner")) {
-            scanners.add(Scanner(null, mutableListOf<Point>().apply { addAll(listOfPoints) }))
+            scanners.add(Scanner(scanners.size, mutableListOf<Point>().apply { addAll(listOfPoints) }))
             listOfPoints.clear()
         } else {
             val coord = line.split(",").map { it.toInt() }
             listOfPoints.add(Point(coord[0], coord[1], coord[2]))
         }
     }
-    scanners.add(Scanner(null, listOfPoints))
+    scanners.add(Scanner(scanners.size, listOfPoints))
     return scanners
+}
+
+fun Set<Scanner>.findScannerWithCommonBeacons(from: Scanner, inCommon: Int = 12): Scanner {
+    val points1 = mutableSetOf<Point>()
+    val points2 = mutableSetOf<Point>()
+    val distances = mutableMapOf<Long, Pair<Point, Point>>()
+
+    for (i in from.scans.indices) { // compute the distances for the scanner we're looking from
+        for (j in i+1 until from.scans.size) {
+            val p1 = from.scans[i]
+            val p2 = from.scans[j]
+            val dist = p1.dist(p2)
+
+            distances[dist] = Pair(p1, p2)
+        }
+    }
+
+    for (scanner in this) { // do the same for all the other scanner
+        for (i in scanner.scans.indices) {
+            for (j in i+1 until scanner.scans.size) {
+                val p1 = scanner.scans[i]
+                val p2 = scanner.scans[j]
+                val dist = p1.dist(p2)
+
+                if (distances.contains(dist)) {
+                    points2.addAll(listOf(p1, p2))
+                    points1.addAll(distances[dist]!!.toList())
+                }
+            }
+        }
+        println("${points2.size} - $points2")
+        // match the points with each others
+        val list2 = points2.toList().mapIndexed { index, point ->
+            point to points2.toList().map { it.dist(point) }.sum() // each point -> sum of distances
+        }.sortedBy { it.second }
+        val list1 = points1.toList().mapIndexed { index, point ->
+            point to points1.toList().map { it.dist(point) }.sum() // each point -> sum of distances
+        }.sortedBy { it.second }
+        println(list1)
+        println(list2)
+
+        if (points2.size >= inCommon) return scanner
+        points2.clear()
+    }
+    throw IllegalStateException("Did not find a scanner with [$inCommon] common points")
 }
 
 fun part1(lines: List<String>) : Int {
     val scanners = lines.toScanners()
+    val poolOfBeacons = mutableSetOf<Point>().apply { addAll(scanners.first().scans) }
 
-    val firstScanner = scanners[0]
-    val secondScanner = scanners[1]
+    val toFind = mutableSetOf<Scanner>().apply { addAll(scanners.drop(1)) }
+    val from = scanners.first()
 
-    val distances = mutableMapOf<Long, List<Point>>()
-    for (i in firstScanner.scans.indices) {
-        for (j in i+1 until firstScanner.scans.size) {
-            val p1 = firstScanner.scans[i]
-            val p2 = firstScanner.scans[j]
-            val dist = p1.dist(p2)
-
-            distances[dist] = listOf(p1, p2)
-        }
-    }
-
-    for (i in secondScanner.scans.indices) {
-        for (j in i+1 until secondScanner.scans.size) {
-            val p1 = secondScanner.scans[i]
-            val p2 = secondScanner.scans[j]
-            val dist = p1.dist(p2)
-
-            if (distances.contains(dist)) {
-                println("${distances[dist]} => ${Pair(p1, p2)}")
-            }
-        }
-    }
+    val found = toFind.findScannerWithCommonBeacons(from)
+    println("Found scanner ${found.id} matching from ${from.id}")
 
     // TODO:
     // 1) common points, associate point in scanner1 to scanner2
