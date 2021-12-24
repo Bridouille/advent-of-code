@@ -2,8 +2,6 @@ package day23
 
 import readInput
 import java.text.SimpleDateFormat
-import java.time.Duration
-import java.time.Instant
 import java.util.*
 import kotlin.IllegalStateException
 import kotlin.math.abs
@@ -27,7 +25,7 @@ data class Amphipod(
         var usedEnergy: Int = 0
 ) {
     companion object {
-        val HALLWAY_Y = 1
+        const val HALLWAY_Y = 1
         val WAIT_POSITIONS = listOf(
                 Point(1, 1), Point(2, 1), Point(4, 1),
                 Point(6, 1),  Point(8, 1), Point(10, 1), Point(11, 1),
@@ -41,110 +39,81 @@ data class Amphipod(
         'D' -> 1000
         else -> throw IllegalStateException("Unknown name $name")
     }
-    private fun getCavePositions(amp: List<Amphipod>) = when (name) {
-        'A' -> {
-            val possibles = mutableListOf<Point>()
-            if (!amp.any { it.pos == Point(3, 2) || it.pos == Point(3, 3) }) {
-                possibles.add(Point(3, 3))
-            }
-            if (amp.any { it.pos == Point(3, 3) && it.name == 'A'} && !amp.any { it.pos == Point(3,2) }) {
-                possibles.add(Point(3, 2))
-            }
-            possibles
-        }
-        'B' -> {
-            val possibles = mutableListOf<Point>()
-            if (!amp.any { it.pos == Point(5, 2) || it.pos == Point(5, 3) }) {
-                possibles.add(Point(5, 3))
-            }
-            if (amp.any { it.pos == Point(5, 3) && it.name == 'B'} && !amp.any { it.pos == Point(5,2) }) {
-                possibles.add(Point(5, 2))
-            }
-            possibles
-        }
-        'C' -> {
-            val possibles = mutableListOf<Point>()
-            if (!amp.any { it.pos == Point(7, 2) || it.pos == Point(7, 3) }) {
-                possibles.add(Point(7, 3))
-            }
-            if (amp.any { it.pos == Point(7, 3) && it.name == 'C'} && !amp.any { it.pos == Point(7,2) }) {
-                possibles.add(Point(7, 2))
-            }
-            possibles
-        }
-        'D' -> {
-            val possibles = mutableListOf<Point>()
-            if (!amp.any { it.pos == Point(9, 2) || it.pos == Point(9, 3) }) {
-                possibles.add(Point(9, 3))
-            }
-            if (amp.any { it.pos == Point(9, 3) && it.name == 'D'} && !amp.any { it.pos == Point(9,2) }) {
-                possibles.add(Point(9, 2))
-            }
-            possibles
-        }
+    private fun getCavePosition(table: List<CharArray>, amph: List<Amphipod>) = when (name) {
+        'A' -> getCaveforX(table, 3, 'A')
+        'B' -> getCaveforX(table, 5, 'B')
+        'C' -> getCaveforX(table, 7, 'C')
+        'D' -> getCaveforX(table, 9, 'D')
         else -> throw IllegalStateException("Unknown name $name")
+    }.filter { cavePos ->
+        val targetX = cavePos.x
+        // There is one fish on the way, impossible to move there
+        !amph.any { (it.pos.x < maxOf(targetX, pos.x) && it.pos.x > minOf(targetX, pos.x)) && it.pos.y == HALLWAY_Y }
+    }
+    private fun getCaveforX(table: List<CharArray>, requiredX: Int, requiredLetter: Char): List<Point> {
+        for (depth in table.caveDepth() downTo 2) {
+            if (table[depth][requiredX] != requiredLetter) {
+                return if (table[depth][requiredX] == '.'){
+                    listOf(Point(requiredX, depth))
+                } else {
+                    emptyList()
+                }
+            }
+        }
+        return emptyList()
     }
 
-    fun isInPosition(amph: List<Amphipod>) = when (name) {
-        'A' -> pos == Point(3, 3) || (pos == Point(3, 2) && amph.any { it.name == 'A' && it.pos == Point(3, 3) })
-        'B' -> pos == Point(5, 3) || (pos == Point(5, 2) && amph.any { it.name == 'B' && it.pos == Point(5, 3) })
-        'C' -> pos == Point(7, 3) || (pos == Point(7, 2) && amph.any { it.name == 'C' && it.pos == Point(7, 3) })
-        'D' -> pos == Point(9, 3) || (pos == Point(9, 2) && amph.any { it.name == 'D' && it.pos == Point(9, 3) })
+    fun isInPosition(table: List<CharArray>) = when (name) {
+        'A' -> isWellPlaced(table, 3, 'A')
+        'B' -> isWellPlaced(table, 5, 'B')
+        'C' -> isWellPlaced(table, 7, 'C')
+        'D' -> isWellPlaced(table, 9, 'D')
         else -> throw IllegalStateException("Unknown name $name")
     }
+    private fun isWellPlaced(table: List<CharArray>, requiredX: Int, requiredLetter: Char) : Boolean {
+        val isInCave = pos.x == requiredX && pos.y >= 2
+        val allDownAreGood = (pos.y..table.caveDepth()).all { table[it][pos.x] == requiredLetter }
+        return isInCave && allDownAreGood
+    }
 
-    fun getPossiblePositions(amph: List<Amphipod>) : List<Point> {
+    fun getPossiblePositions(table: List<CharArray>, amph: List<Amphipod>) : List<Point> {
         // Already in the end position
-        if (isInPosition(amph)) return emptyList()
+        if (isInPosition(table)) return emptyList()
 
         // Blocked by another fish to get out
-        if (pos.y == 3 && amph.any { it.pos == Point(pos.x, pos.y - 1) }) return emptyList()
+        if (pos.y >= 3 && table[pos.y - 1][pos.x] != '.') return emptyList()
 
         return if (usedEnergy != 0) { // When we got out of a cave, next step is to get into our cave
-            getCavePositions(amph).filter { cavePos ->
-                val targetX = cavePos.x
-                // There is one fish on the way, impossible to move there
-                !amph.any { (it.pos.x < maxOf(targetX, pos.x) && it.pos.x > minOf(targetX, pos.x)) && it.pos.y == HALLWAY_Y }
-            }
+            getCavePosition(table, amph)
         } else {
-            val directCaves = getCavePositions(amph).filter { cavePos ->
-                val targetX = cavePos.x
-                // There is one fish on the way, impossible to move there
-                !amph.any { (it.pos.x < maxOf(targetX, pos.x) && it.pos.x > minOf(targetX, pos.x)) && it.pos.y == HALLWAY_Y }
-            }
-            val waitPos = WAIT_POSITIONS.filter { waitPos ->
+            return getCavePosition(table, amph) + WAIT_POSITIONS.filter { waitPos ->
                 val targetX = waitPos.x
                 // There is one fish on the way, impossible to move there
                 !amph.any { (it.pos.x <= maxOf(targetX, pos.x) && it.pos.x >= minOf(targetX, pos.x)) && it.pos.y == waitPos.y }
             }
-            return directCaves + waitPos
         }
     }
-
-    fun moveToPos(newPos: Point) {
+    fun getEnergyToMove(newPos: Point): Int {
         val energyToGoUp = abs(HALLWAY_Y - pos.y) * energyForStep()
         val energyX = abs(newPos.x - pos.x) * energyForStep()
         val energyToGoDown = abs(HALLWAY_Y - newPos.y) * energyForStep()
 
-        this.usedEnergy += energyToGoUp + energyX + energyToGoDown
-        this.pos = newPos
+        return energyToGoUp + energyX + energyToGoDown
     }
-    fun resetToPos(pos: Point, energy: Int) {
-        this.usedEnergy = energy
-        this.pos = pos
+    fun moveToPos(newPos: Point) {
+        usedEnergy += getEnergyToMove(newPos)
+        pos = newPos
+    }
+    fun resetToPos(resetPos: Point, resetEnergy: Int) {
+        usedEnergy = resetEnergy
+        pos = resetPos
     }
 }
 
-fun List<Amphipod>.isDone() = all { it.isInPosition(this) }
+fun List<Amphipod>.isDone(table: List<CharArray>) = all { it.isInPosition(table) }
 fun List<Amphipod>.getEnergySpent() = sumOf { it.usedEnergy }
 fun List<Amphipod>.print() {
-    listOf(
-            "#############",
-            "#...........#",
-            "###.#.#.#.###",
-            "  #.#.#.#.#  ",
-            "  #########  "
-    ).forEachIndexed { y, s ->
+    getEmptyCave(this.maxOf { it.pos.y } + 1).forEachIndexed { y, s ->
         for (x in s.indices) {
             this.firstOrNull { it.pos == Point(x, y) }?.let {
                 print(it.name)
@@ -153,58 +122,84 @@ fun List<Amphipod>.print() {
         println()
     }
 }
+fun List<Amphipod>.getTable(caveDepth: Int): MutableList<CharArray> {
+    return getEmptyCave(caveDepth).mapIndexed { y, s ->
+        s.mapIndexed { x, c -> this.firstOrNull { it.pos == Point(x, y) }?.name ?: c }.toCharArray()
+    }.toMutableList()
+}
+fun getEmptyCave(depth: Int) : MutableList<String> {
+    val base = mutableListOf(
+            "#############",
+            "#...........#",
+            "###.#.#.#.###",
+    )
+    for (i in 1 until depth - base.size) {
+        base.add("  #.#.#.#.#  ")
+    }
+    base.add("  #########  ")
+    return base
+}
+fun List<CharArray>.caveDepth() = this.size - 2
 
-fun energyToSolve(fishes: List<Amphipod>): Int? {
-    if (fishes.isDone()) {
-        // println("Found solution: ${fishes.getEnergySpent()}")
+var minFound: Int = Integer.MAX_VALUE
+fun energyToSolve(table: MutableList<CharArray>, fishes: List<Amphipod>): Int? {
+    if (fishes.isDone(table)) {
+        minFound = minOf(minFound, fishes.getEnergySpent())
         return fishes.getEnergySpent()
     }
     val energies = mutableListOf<Int>()
-    var hasMoved = false
 
     // fishes.print()
-    // Thread.sleep(500)
     for (amph in fishes) {
-        val possiblePos = amph.getPossiblePositions(fishes)
-        // println("$amph -> $possiblePos")
+        val possiblePos = amph.getPossiblePositions(table, fishes)
 
         for (tentativePos in possiblePos) {
-            val tmp = amph.pos.copy()
-            val tmpE = amph.usedEnergy
-            amph.moveToPos(tentativePos)
-            hasMoved = true
+            val potentialAdd = fishes.getEnergySpent() + amph.getEnergyToMove(tentativePos)
+            if (minFound <= potentialAdd) continue
 
-            energyToSolve(fishes)?.let { tenta ->
+            val tmp = amph.copy()
+
+            table[amph.pos.y][amph.pos.x] = '.'
+            table[tentativePos.y][tentativePos.x] = amph.name
+            amph.moveToPos(tentativePos)
+
+            energyToSolve(table, fishes)?.let { tenta ->
                 energies.add(tenta)
             }
-            amph.resetToPos(tmp, tmpE)
+
+            table[tentativePos.y][tentativePos.x] = '.'
+            table[tmp.pos.y][tmp.pos.x] = amph.name
+            amph.resetToPos(tmp.pos, tmp.usedEnergy)
         }
     }
-    if (!hasMoved) return null
     return energies.minOrNull()
 }
 
-fun part1(lines: List<String>): Int {
-    val fishes = lines.toAmphipods()
-
+fun <T>measureTime(block: () -> T): T {
     val start = System.currentTimeMillis()
-    val result = energyToSolve(fishes) ?: -1
-
-    println("took ${SimpleDateFormat("mm:ss:SSS").format(Date(System.currentTimeMillis() - start))}")
-    return result
+    return block().also {
+        println("Solving took ${SimpleDateFormat("mm:ss:SSS").format(Date(System.currentTimeMillis() - start))}")
+    }
 }
 
-fun part2(lines: List<String>): Long {
-    return 2
+fun resolve(lines: List<String>): Int {
+    val fishes = lines.toAmphipods()
+    val table = fishes.getTable(lines.size)
+    minFound = Integer.MAX_VALUE
+
+    return measureTime {
+        energyToSolve(table, fishes) ?: -1
+    }
 }
 
 fun main() {
-
     val simple = readInput("day23/test")
-    println("part1(test) => " + part1(simple))
-    // println("part2(test) => " + part2(simple))
+    println("part1(test) => " + resolve(simple))
+    val input = readInput("day23/input")
+    println("part1(input) => " + resolve(input))
 
-    // val input = readInput("day23/input")
-    // println("part1(input) => " + part1(input)) // // 16157
-    // println("part2(input) => " + part2(input))
+    val simpleDeep = readInput("day23/test2")
+    println("part2(simpleDeep) => " + resolve(simpleDeep))
+    val inputDeep = readInput("day23/input2")
+    println("part2(inputDeep) => " + resolve(inputDeep))
 }
