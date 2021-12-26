@@ -53,7 +53,6 @@ fun runInstructions(
 ): String? {
     if (inp.length >= 8 && startZ > 100000) return null
     if (inp.length >= 6 && startZ > 1000000) return null
-    if (reversed && inp.length > 8 && startZ > 4000) return null
 
     var (w, x, y, z) = listOf(startW, startX, startY, startZ)
     val key = "$inp/$z"
@@ -150,6 +149,7 @@ fun part1(lines: List<String>) = measureTime {
 fun part2(lines: List<String>) = measureTime {
     toExec = lines
     memo.clear()
+    // used this to solve pt2: https://github.com/mrphlip/aoc/blob/master/2021/24.md
     runInstructions(reversed = true)?.toLong()
 }
 
