@@ -8,6 +8,7 @@ import (
 )
 
 const INPUT_DIR = "inputs"
+const TEMPLATE_FILE = "template.txt"
 
 func generateDay(nb int) {
 	day := fmt.Sprintf("day%02d", nb)
@@ -16,16 +17,25 @@ func generateDay(nb int) {
 		fmt.Printf("Could not create directory %s -> %s", day, err)
 		return
 	}
-	gofile := fmt.Sprintf("%s/%s.go", day, day)
-	if file, err := os.Create(gofile); err != nil {
-		fmt.Printf("Could not create file %s -> %s", gofile, err)
-	} else {
-		file.Close()
+	goFilename := fmt.Sprintf("%s/%s.go", day, day)
+	goFile, err := os.Create(goFilename)
+	if err != nil {
+		fmt.Printf("Could not create file %s -> %s", goFilename, err)
+		return
+	}
+	defer goFile.Close()
+	template, err := os.ReadFile(TEMPLATE_FILE)
+	if err != nil {
+		panic(err)
+	}
+	toWrite := strings.ReplaceAll(string(template), "XXX", day)
+	if _, err := goFile.Write([]byte(toWrite)); err != nil {
+		panic(err)
 	}
 
-	inputs := []string{"example.txt", "part1.txt", "part2.txt"}
+	inputs := []string{"_example.txt", ".txt"}
 	for _, input := range inputs {
-		filename := fmt.Sprintf("%s/%s_%s", INPUT_DIR, day, input)
+		filename := fmt.Sprintf("%s/%s%s", INPUT_DIR, day, input)
 		if file, err := os.Create(filename); err != nil {
 			fmt.Printf("Could not create file %s -> %s", filename, err)
 		} else {
