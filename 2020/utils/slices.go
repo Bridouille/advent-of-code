@@ -28,3 +28,12 @@ func Count[Item interface{}](slice []Item, predicate func(Item) bool) int {
 	}
 	return count
 }
+
+func Contains[Item interface{ comparable }](slice []Item, needle Item) bool {
+	for _, item := range slice {
+		if item == needle {
+			return true
+		}
+	}
+	return false
+}

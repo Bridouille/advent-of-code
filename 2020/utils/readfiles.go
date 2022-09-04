@@ -14,3 +14,11 @@ func ReadFile(path string) []string {
 		return len(strings.Trim(str, " ")) > 0
 	})
 }
+
+func ReadCompleteFile(path string) []string {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return strings.Split(string(file), "\n")
+}
