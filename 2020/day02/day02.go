@@ -33,23 +33,19 @@ func (entry DbEntry) isValid2() bool {
 	return (first == byte(entry.letter) || second == byte(entry.letter)) && first != second
 }
 
-func toDbEntries(lines []string) []DbEntry {
-	ret := make([]DbEntry, 0)
-	for _, str := range lines {
-		part := strings.Split(str, " ")
-		ret = append(ret, DbEntry{
-			min:      utils.ToInt(strings.Split(part[0], "-")[0]),
-			max:      utils.ToInt(strings.Split(part[0], "-")[1]),
-			letter:   rune(part[1][0]),
-			password: part[2],
-		})
+func stringToDbEntry(str string) DbEntry {
+	part := strings.Split(str, " ")
+	return DbEntry{
+		min:      utils.ToInt(strings.Split(part[0], "-")[0]),
+		max:      utils.ToInt(strings.Split(part[0], "-")[1]),
+		letter:   rune(part[1][0]),
+		password: part[2],
 	}
-	return ret
 }
 
 func part1(lines []string) int {
 	var valids int = 0
-	for _, e := range toDbEntries(lines) {
+	for _, e := range utils.Map[string, DbEntry](lines, stringToDbEntry) {
 		if e.isValid() {
 			valids++
 		}
@@ -59,7 +55,7 @@ func part1(lines []string) int {
 
 func part2(lines []string) int {
 	var valids int = 0
-	for _, e := range toDbEntries(lines) {
+	for _, e := range utils.Map[string, DbEntry](lines, stringToDbEntry) {
 		if e.isValid2() {
 			valids++
 		}

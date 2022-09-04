@@ -7,7 +7,9 @@ import (
 )
 
 func part1(lines []string) int {
-	intSlice := utils.ToIntSlice(lines)
+	intSlice := utils.Map[string, int](lines, func(str string) int {
+		return utils.ToInt(str)
+	})
 	for i := range intSlice {
 		for j := i + 1; j < len(intSlice); j++ {
 			if intSlice[i]+intSlice[j] == 2020 {
@@ -19,7 +21,9 @@ func part1(lines []string) int {
 }
 
 func part2(lines []string) int {
-	intSlice := utils.ToIntSlice(lines)
+	intSlice := utils.Map[string, int](lines, func(str string) int {
+		return utils.ToInt(str)
+	})
 	for i := range intSlice {
 		for j := i + 1; j < len(intSlice); j++ {
 			for k := j + 1; k < len(intSlice); k++ {

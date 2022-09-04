@@ -1,9 +1,7 @@
 package utils
 
-import "strconv"
-
-func Filter(slice []string, predicate func(string) bool) []string {
-	ret := make([]string, 0)
+func Filter[Item interface{}](slice []Item, predicate func(Item) bool) []Item {
+	ret := make([]Item, 0)
 	for _, str := range slice {
 		if predicate(str) {
 			ret = append(ret, str)
@@ -12,14 +10,21 @@ func Filter(slice []string, predicate func(string) bool) []string {
 	return ret
 }
 
-func ToIntSlice(slice []string) []int {
-	ret := make([]int, len(slice))
-	for idx, str := range slice {
-		value, err := strconv.Atoi(str)
-		if err != nil {
-			panic(err)
-		}
+func Map[Input interface{}, Output interface{}](slice []Input, conv func(Input) Output) []Output {
+	ret := make([]Output, len(slice))
+	for idx, item := range slice {
+		value := conv(item)
 		ret[idx] = value
 	}
 	return ret
+}
+
+func Count[Item interface{}](slice []Item, predicate func(Item) bool) int {
+	count := 0
+	for _, item := range slice {
+		if predicate(item) {
+			count++
+		}
+	}
+	return count
 }
