@@ -45,8 +45,6 @@ func nbWays(memo map[int]int, numbers []int, toFind int) int {
 func part2(lines []string) int {
 	numbers := utils.Map(lines, utils.ToInt)
 	numbers = append(numbers, 0)
-	copy(numbers[1:], numbers)
-	numbers[0] = 0
 	memo := make(map[int]int)
 	return nbWays(memo, numbers, utils.Max(numbers))
 }
