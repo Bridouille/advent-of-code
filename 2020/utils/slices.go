@@ -1,5 +1,7 @@
 package utils
 
+import "golang.org/x/exp/constraints"
+
 func Filter[Item interface{}](slice []Item, predicate func(Item) bool) []Item {
 	ret := make([]Item, 0)
 	for _, str := range slice {
@@ -38,7 +40,7 @@ func Contains[Item interface{ comparable }](slice []Item, needle Item) bool {
 	return false
 }
 
-func Min(slice []uint64) uint64 {
+func Min[Item constraints.Ordered](slice []Item) Item {
 	min := slice[0]
 	for i := 1; i < len(slice); i++ {
 		if slice[i] < min {
@@ -48,7 +50,7 @@ func Min(slice []uint64) uint64 {
 	return min
 }
 
-func Max(slice []uint64) uint64 {
+func Max[Item constraints.Ordered](slice []Item) Item {
 	max := slice[0]
 	for i := 1; i < len(slice); i++ {
 		if slice[i] > max {
