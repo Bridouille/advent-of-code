@@ -22,11 +22,11 @@ fun part2(input: List<String>) = input.toElvesCalories().sortedDescending().let 
 }
 
 fun main() {
-    val testInput = readInput("day01/test", false)
-    println(part1(testInput))
-    println(part2(testInput))
+    val testInput = readInput("day01_example.txt", false)
+    println("part1 example = " + part1(testInput))
+    println("part2 example = " + part2(testInput))
 
-    val input = readInput("day01/input", false)
-    println(part1(input))
-    println(part2(input))
+    val input = readInput("day01.txt", false)
+    println("part1 input = " + part1(input))
+    println("part2 input = " + part2(input))
 }

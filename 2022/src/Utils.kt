@@ -8,7 +8,7 @@ import java.security.MessageDigest
 fun readInput(
     name: String,
     removeEmptyLines: Boolean = true
-) = File("src", "$name.txt")
+) = File("2022/inputs", "$name")
     .readLines()
     .filter {
         if (removeEmptyLines) {

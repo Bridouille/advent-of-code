@@ -1,0 +1,21 @@
+package XXX
+
+import readInput
+
+fun part1(input: List<String>): Int {
+    return 1
+}
+
+fun part2(input: List<String>): Int {
+    return 2
+}
+
+fun main() {
+    val testInput = readInput("XXX_example.txt")
+    println("part1 example = " + part1(testInput))
+    println("part2 example = " + part2(testInput))
+
+    // val input = readInput("XXX.txt")
+    // println("part1 input = " + part1(input))
+    // println("part2 input = " + part2(input))
+}
