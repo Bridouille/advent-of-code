@@ -2,6 +2,10 @@ import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
 
+const val GREEN = "\u001B[32m"
+const val BLUE = "\u001B[34m"
+const val RESET = "\u001B[0m"
+
 /**
  * Reads lines from the given input txt file.
  */
@@ -17,6 +21,15 @@ fun readInput(
             true
         }
     }
+
+/**
+ * Executes the given [block] and prints the elapsed time in milliseconds.
+ */
+inline fun printTimeMillis(block: () -> Unit) {
+    val start = System.currentTimeMillis()
+    block()
+    println(" (took $BLUE${System.currentTimeMillis() - start}ms$RESET)")
+}
 
 /**
  * Converts string to md5 hash.
