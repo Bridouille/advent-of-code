@@ -68,16 +68,14 @@ fun getMaxPressure(
     currFlow: Int,
     total: Int,
     debugPath: String
-): Int? {
+): Pair<Int, String>? {
     if (mnLeft < 0) return null
-    if (mnLeft == 0) return total
+    if (mnLeft == 0) return Pair(total, debugPath)
 
-    val leftToOpen = graph.values.filter { it.shouldOpen() }.sortedByDescending { it.flowRate }
-    if (leftToOpen.isEmpty()) {
-        return total + currFlow * mnLeft
-    }
+    val leftToOpen = graph.values.filter { it.shouldOpen() }
+    if (leftToOpen.isEmpty()) return Pair(total + currFlow * mnLeft, debugPath)
 
-    val totals = mutableListOf<Int>()
+    val totals = mutableListOf<Pair<Int, String>>()
     for (left in leftToOpen) {
         val dist = distances["${left.name}-$currentPos"]!!
         val timeToOpenValve = dist + 1
@@ -93,28 +91,36 @@ fun getMaxPressure(
         if (tot != null) totals.add(tot)
         left.close()
     }
-    totals.add(total + currFlow * mnLeft) // The total if we sit here doing nothing
-    return totals.maxOrNull()
+    totals.add(Pair(total + currFlow * mnLeft, debugPath)) // The total if we sit here doing nothing
+    return totals.maxByOrNull { it.first }
 }
 
 fun part1(input: List<String>): Int? {
     val graph = parseInput(input)
     val distances = fillDistances(graph)
-    return getMaxPressure(graph, distances, "AA",30, 0, 0, "AA")
+
+    return getMaxPressure(graph, distances, "AA",30, 0, 0, "AA")?.first
 }
 
+// https://www.reddit.com/r/adventofcode/comments/znjzjm/2022_day_16_if_a_solution_gives_me_a_star_then/
 fun part2(input: List<String>): Int {
     val graph = parseInput(input)
     val distances = fillDistances(graph)
-    return 2
+
+    val me = getMaxPressure(graph, distances, "AA", 26, 0, 0, "AA")!!
+    for (name in me.second.split(" -> ")) {
+        graph[name]!!.open()
+    }
+    val elephant = getMaxPressure(graph, distances, "AA", 26, 0, 0, "AA")!!
+    return me.first + elephant.first
 }
 
 fun main() {
     val testInput = readInput("day16_example.txt")
     printTimeMillis { print("part1 example = $GREEN" + part1(testInput) + RESET) }
-    printTimeMillis { print("part2 example = $GREEN" + part2(testInput) + RESET) }
+    printTimeMillis { print("part2 example = $GREEN" + part2(testInput) + RESET) } // 1707
 
     val input = readInput("day16.txt")
     printTimeMillis { print("part1 input = $GREEN" + part1(input) + RESET) }
-    // printTimeMillis { print("part2 input = $GREEN" + part2(input) + RESET) }
+    printTimeMillis { print("part2 input = $GREEN" + part2(input) + RESET) }
 }
