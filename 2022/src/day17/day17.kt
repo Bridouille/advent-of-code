@@ -36,18 +36,16 @@ fun part1(input: List<String>, times: Int = 1) = input.first().let { inst ->
     val cave = mutableSetOf<Point>()
 
     for (i in 0 until times) {
+        val height = (if (cave.isEmpty()) 0 else cave.maxBy { it.y }.y)
         val nextShape = ROCKS[i % ROCKS.size]
-        val yOffset = (if (cave.isEmpty()) 0 else cave.maxBy { it.y }.y) + 4
-        var falling = nextShape.initialize(2, yOffset)
+        var falling = nextShape.initialize(2, height + 4)
 
         while (true) {
             when (inst[instIdx++ % inst.length]) {
                 '>' -> falling.moveRight(cave)?.let { falling = it }
                 '<' -> falling.moveLeft(cave)?.let { falling = it }
             }
-            falling.moveDown(cave)?.let {
-                falling = it
-            } ?: break // We can't fall more
+            falling.moveDown(cave)?.let { falling = it } ?: break // We can't fall more
         }
         cave.addAll(falling)
     }
