@@ -49,3 +49,20 @@ fun Long.LCM(other: Long): Long {
     }
     return maxLcm
 }
+
+fun <T> permute(array: List<T>): List<List<T>> {
+    if (array.size <= 1) return listOf(array) // Base case: single element or empty list
+    val permutations = mutableListOf<List<T>>()
+
+    for (i in array.indices) {
+        // Remove the current element from the list
+        val remainingElements = array.toMutableList().apply { removeAt(i) }
+        // Generate permutations for the remaining elements
+        val subPermutations = permute(remainingElements)
+        // Add the removed element to the front of each sub-permutation
+        for (perm in subPermutations) {
+            permutations.add(listOf(array[i]) + perm)
+        }
+    }
+    return permutations
+}
