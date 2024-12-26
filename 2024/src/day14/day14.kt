@@ -48,7 +48,6 @@ fun part2(input: List<String>): Int {
     val width = 101
     val height = 103
     val finals = mutableListOf<Point>()
-    val map = Array(height) { Array(width) { '.' } }
 
     for (seconds in 0 until 10000) {
         finals.clear()
@@ -60,28 +59,9 @@ fun part2(input: List<String>): Int {
             finals.add(Point(finalX, finalY))
         }
 
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                map[y][x] = if (finals.contains(Point(x, y))) {
-                    '#'
-                } else {
-                    '.'
-                }
-            }
-        }
-
-        if (map.any { it.joinToString("").contains("##################") }) {
-            for (line in map) {
-                println(line.joinToString(""))
-            }
-            println("Found seconds: $seconds")
+        if (finals.toSet().size == finals.size) {
+            println("Found seconds: $seconds thanks Dorian the Goat")
             return seconds
-        }
-
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                map[y][x] = '.'
-            }
         }
     }
     throw IllegalStateException("Didn't find seconds")
